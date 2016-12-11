@@ -5,6 +5,8 @@
     <string name="facebook_app_id">688710437958394</string>
     <string name="action_add_favourite">Add to Favourites</string>
     <string name="action_play_next">Play Next</string>
-    <string name="backdrop_title">LOVE MUSIC</string>
+    <string name="login_facebook">INICIAR SESION CON FACEBOOK</string>
+    <string name="login_google">INICIAR SESION CON GOOGLE+</string>
+
     <string name="backdrop_subtitle">This season top 20 albums</string>
 </resources>
