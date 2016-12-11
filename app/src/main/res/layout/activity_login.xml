@@ -48,7 +48,7 @@
             android:src="@drawable/icon" />
 
         <TextView
-            android:id="@+id/tv1"
+            android:id="@+id/tvApp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/iv1"
@@ -62,7 +62,7 @@
             android:id="@+id/btnFacebook"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_below="@+id/tv1"
+            android:layout_below="@+id/tvApp"
             android:layout_margin="16dp"
             android:background="@drawable/button_facebook"
             android:onClick="onClickFacebook"
@@ -70,6 +70,7 @@
             android:textColor="@android:color/white" />
 
         <Button
+            android:id="@+id/btnGoogle"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_below="@+id/btnFacebook"

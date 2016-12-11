@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,7 +14,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
+import com.camel.back2home.App;
 import com.camel.back2home.R;
 import com.camel.back2home.Utils;
 import com.camel.back2home.business.BUser;
@@ -40,6 +44,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_login);
+
+        ((TextView) findViewById(R.id.tvApp)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_BOLD));
+        ((Button) findViewById(R.id.btnFacebook)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
+        ((Button) findViewById(R.id.btnGoogle)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
 
         if (new Utils(this).readUser() != null) {
             startActivity(new Intent(this, MainActivity.class));
