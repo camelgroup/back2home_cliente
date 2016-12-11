@@ -7,6 +7,7 @@
     <color name="color_facebook_pressed">#283593</color>
 
     <color name="color_google">#dc483c</color>
+    <color name="color_google_pressed">#f44336</color>
     <color name="color_white">#ffffff</color>
     <color name="album_title">#000000</color>
     <color name="trans">#00000000</color>
