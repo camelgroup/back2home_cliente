@@ -144,7 +144,7 @@ public class LoginActivity extends AppCompatActivity {
                 .setPositiveButton("ACEPTAR", new DialogInterface.OnClickListener() {
                     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
                     public void onClick(DialogInterface dialog, int id) {
-                        LoginActivity.this.finishAffinity();
+                        LoginActivity.this.finish();
                     }
                 })
                 .setNegativeButton("CANCELAR", null);
