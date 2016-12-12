@@ -8,7 +8,7 @@ public class App {
     public static String NUEVO_POST = "http://findmypetweb-lolpez.rhcloud.com/web_service/poster/nuevo";
     public static String NUEVO_USUARIO = "http://back2home-lolpez.rhcloud.com/usuario/registrar";
     public static String AUTHICATION = "http://back2home-lolpez.rhcloud.com/usuario/autenticar";
-
+    public static String RECUPERAR_PASS = "http://back2home-lolpez.rhcloud.com/usuario/recuperar";
     public static String RAZA = "/web_service/raza/";
     public static String TIPO_MASCOTA = "/web_service/tipo_mascota";
     public static String POSTERS = "/web_service/poster";

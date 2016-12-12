@@ -83,38 +83,38 @@ public class MainActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.tvMyPets)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
     }
 
-//    public void onClickAlert(View view) {
-//
+    public void onClickAlert(View view) {
+
 //        Intent postActivity = new Intent(this, PosterActivity.class);
 //        postActivity.putExtra("alerta", true);
 //        startActivity(postActivity);
-//    }
-//
-//    public void onClickNewPost(View view) {
+    }
+
+    public void onClickNewPost(View view) {
 //        Intent postActivity = new Intent(this, PosterActivity.class);
 //        postActivity.putExtra("alerta", false);
 //        startActivity(postActivity);
-//    }
-//
-//    public void onClickMap(View view) {
+    }
+
+    public void onClickMap(View view) {
 //        Intent mapsActivity = new Intent(this, MapsActivity.class);
 //        startActivity(mapsActivity);
-//    }
-//
-//    public void onClickSearch(View view) {
+    }
+
+    public void onClickSearch(View view) {
 //        Intent searchActivity = new Intent(this, SearchActivity.class);
 //        startActivity(searchActivity);
-//    }
-//
-//    public void onClickPartners(View view) {
+    }
+
+    public void onClickPartners(View view) {
 //        Intent partnersActivity = new Intent(this, PartnersActivity.class);
 //        startActivity(partnersActivity);
-//    }
-//
-//    public void onClickMyPosts(View view) {
+    }
+
+    public void onClickMyPosts(View view) {
 //        Intent myPetsActivity = new Intent(this, MyPetsActivity.class);
 //        startActivity(myPetsActivity);
-//    }
+    }
 
     public void onClickLogOut(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

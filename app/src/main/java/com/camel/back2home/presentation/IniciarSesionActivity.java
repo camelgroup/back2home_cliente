@@ -17,7 +17,6 @@ import android.widget.TextView;
 import com.camel.back2home.R;
 import com.camel.back2home.Utils;
 import com.camel.back2home.business.BAuth;
-import com.camel.back2home.business.BUser;
 import com.camel.back2home.model.base.User;
 import com.facebook.login.LoginManager;
 
@@ -64,7 +63,7 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_iniciar_sesion:
-                    onClickIniciarSession();
+                onClickIniciarSession();
                 break;
         }
     }
@@ -74,7 +73,7 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
         user = new User();
         user.setEmail(edtEmail.getText().toString());
         user.setPassword(edtPassword.getText().toString());
-        new SendTask().execute(user);
+        new SendTask(false).execute(user);
     }
 
     private boolean submitForm() {
@@ -86,6 +85,20 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
             return false;
         }
         return true;
+    }
+
+    public void onClickForgotPassword(View view) {
+        if (validateEmail()) {
+            user = new User();
+            user.setEmail(edtEmail.getText().toString());
+            new SendTask(true).execute(user);
+        }
+        else{
+            Snackbar snackbar = Snackbar
+                    .make(findViewById(R.id.rlLogin), "Necesita un correo registrado", Snackbar.LENGTH_SHORT)
+                    .setAction("OK", null);
+            snackbar.show();
+        }
     }
 
     private boolean validateEmail() {
@@ -127,13 +140,16 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
     public class SendTask extends AsyncTask<User, Void, Void> {
         ProgressDialog progressDialog;
         long idResponse = 0;
-        String wexd;
+        boolean isForgotten = false;
 
+        public SendTask(boolean b) {
+            isForgotten = b;
+        }
 
         @Override
         protected void onPreExecute() {
             progressDialog = new ProgressDialog(IniciarSesionActivity.this);
-            progressDialog.setMessage("Iniciando Sesion...");
+            progressDialog.setMessage("Ejecutando...");
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setProgress(10);
             progressDialog.setMax(100);
@@ -144,8 +160,10 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
         @Override
         protected Void doInBackground(User... users) {
             try {
-//                wexd = new BUser(IniciarSesionActivity.this).logins(users[0]);
-                user = new BAuth(IniciarSesionActivity.this).login(users[0]);
+                if (!isForgotten)
+                    user = new BAuth(IniciarSesionActivity.this).login(users[0]);
+                else
+                    user.setPkusuario(new BAuth(IniciarSesionActivity.this).forgotPassword(users[0]));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -155,31 +173,38 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            if (user.getPkusuario() != 0) {
-                new Utils(IniciarSesionActivity.this).writeUser(user);
-                startActivity(new Intent(IniciarSesionActivity.this, MainActivity.class));
-                //startService(new Intent(getBaseContext(), NotificationListener.class));
-                finish();
-            } else {
-                Snackbar snackbar = Snackbar
-                        .make(findViewById(R.id.rlLogin), "Ocurrio un error, intente nuevamente", Snackbar.LENGTH_LONG)
-                        .setAction("OK", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                new IniciarSesionActivity.SendTask().execute(user);
-                            }
-                        })
-                        .setAction("NO", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                LoginManager.getInstance().logOut();
-                                new Utils(IniciarSesionActivity.this).writeUser(null);
-                            }
-                        });
-                snackbar.show();
-
-            }
             progressDialog.dismiss();
+            if (isForgotten) {
+                Snackbar snackbar = Snackbar
+                        .make(findViewById(R.id.rlLogin), "Se ha enviado un correo al correo solicitado, verifique por favor", Snackbar.LENGTH_LONG)
+                        .setAction("OK", null);
+                snackbar.show();
+            } else {
+                if (user.getPkusuario() != 0) {
+                    new Utils(IniciarSesionActivity.this).writeUser(user);
+                    startActivity(new Intent(IniciarSesionActivity.this, MainActivity.class));
+                    //startService(new Intent(getBaseContext(), NotificationListener.class));
+                    finish();
+                } else {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.rlLogin), "Ocurrio un error, intente nuevamente", Snackbar.LENGTH_LONG)
+                            .setAction("OK", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    new IniciarSesionActivity.SendTask(false).execute(user);
+                                }
+                            })
+                            .setAction("NO", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    LoginManager.getInstance().logOut();
+                                    new Utils(IniciarSesionActivity.this).writeUser(null);
+                                }
+                            });
+                    snackbar.show();
+
+                }
+            }
         }
     }
 }

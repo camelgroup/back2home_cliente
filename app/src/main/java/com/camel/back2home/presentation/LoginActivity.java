@@ -46,13 +46,10 @@ import com.google.android.gms.common.api.Scope;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 
 public class LoginActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
-
 
     private static final int RC_SIGN_IN = 007;
     private GoogleApiClient plusClient;
@@ -103,8 +100,9 @@ public class LoginActivity extends AppCompatActivity
         if (new Utils(this).readUser() != null) {
             startActivity(new Intent(this, MainActivity.class));
         }
+
         /**
-         * google+ client
+         * google+ client builder
          */
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestScopes(new Scope(Scopes.PLUS_LOGIN))
@@ -112,6 +110,9 @@ public class LoginActivity extends AppCompatActivity
                 .requestEmail()
                 .build();
 
+        /**
+         * params google plus client
+         */
         plusClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
@@ -138,15 +139,18 @@ public class LoginActivity extends AppCompatActivity
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                String accessToken = loginResult.getAccessToken().getToken();
+
                 GraphRequest request = GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
 
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        Log.i("LoginActivity", response.toString());
+
                         // Get facebook data from login
                         Bundle bFacebookData = getFacebookData(object);
                         if (bFacebookData != null) {
+                            /**
+                             * creating user object
+                             */
                             User user = new User();
                             user.setIdFacebook(bFacebookData.getString("idFacebook"));
                             user.setNombre(bFacebookData.getString("first_name") + " " + bFacebookData.getString("last_name"));
@@ -157,61 +161,10 @@ public class LoginActivity extends AppCompatActivity
                     }
                 });
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", "id, first_name, last_name, email,gender, birthday, location"); // Parámetros que pedimos a facebook
+                // Parámetros que pedimos a facebook
+                parameters.putString("fields", "id, first_name, last_name, email,gender, birthday, location");
                 request.setParameters(parameters);
                 request.executeAsync();
-
-//                GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
-//                    @Override
-//                    public void onCompleted(JSONObject object, GraphResponse response) {
-//                        try {
-//                            User user = new User();
-////                            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-//                            String mPhoneNumber = "";
-////                            getMy10DigitPhoneNumber();
-//                            String id = object.getString("id");
-//                            String personName = object.getString("name");
-//                            String email = object.getString("email");
-//
-//                            if (mPhoneNumber != null)
-//                                user.setNroTelefono(mPhoneNumber);
-//                            user.setNroTelefono("");
-//                            user.setNombre(personName);
-//                            user.setEmail(email);
-//                            user.setIdFacebook(id);
-////                            Firebase firebase = new Firebase(App.FIREBASE_APP);
-////
-////                            //Pushing a new element to firebase it will automatically create a unique id
-////                            Firebase newFirebase = firebase.push();
-////
-////                            //Creating a map to store name value pair
-////                            Map<String, String> val = new HashMap<>();
-////
-////                            //pushing msg = none in the map
-////                            val.put("msg", "none");
-////
-////                            //saving the map to firebase
-////                            newFirebase.setValue(val);
-////
-////                            //Getting the unique id generated at firebase
-////                            String uniqueId = newFirebase.getKey();
-////                            user.setIdFirebase(uniqueId);
-////                            Log.i("QWD", uniqueId);
-//
-////                            user.setPkusuario(0);
-//                            //////
-////                            new Utils(LoginActivity.this).writeUser(user);
-////                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-////                            finish();
-//                            new SendTask().execute(user);
-//
-//                        } catch (Exception e) {
-//                            LoginManager.getInstance().logOut();
-//                            new Utils(LoginActivity.this).writeUser(null);
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }).executeAsync();
             }
 
             @Override
@@ -231,47 +184,25 @@ public class LoginActivity extends AppCompatActivity
         ((Button) findViewById(R.id.btnGoogle)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                plusClient.connect();
                 progressDialog.show();
                 Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(plusClient);
                 startActivityForResult(signInIntent, RC_SIGN_IN);
             }
         });
 
-//        ((Button) findViewById(R.id.btnFacebook)).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
-//            }
-//        });
-
-
-//        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
-//
-//        signInButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                plusClient.connect();
-//                progressDialog.show();
-//            }
-//        });
-
     }
 
+    /**
+     * get facebook's values
+     *
+     * @param object
+     * @return
+     */
     private Bundle getFacebookData(JSONObject object) {
         try {
             Bundle bundle = new Bundle();
             String id = object.getString("id");
 
-            try {
-                URL profile_pic = new URL("https://graph.facebook.com/" + id + "/picture?width=200&height=150");
-                Log.i("profile_pic", profile_pic + "");
-                bundle.putString("profile_pic", profile_pic.toString());
-
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                return null;
-            }
             bundle.putString("idFacebook", id);
             if (object.has("first_name"))
                 bundle.putString("first_name", object.getString("first_name"));
@@ -334,12 +265,17 @@ public class LoginActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
 //        callbackManager.onActivityResult(requestCode, responseCode, intent);
         super.onActivityResult(requestCode, responseCode, intent);
-
+        /**
+         * if google
+         */
         if (requestCode == RC_SIGN_IN) {
 //            mIntentInProgress = false;
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
             handleSignInResult(result);
         }
+        /**
+         * if facebook
+         */
         if (callbackManager != null)
             callbackManager.onActivityResult(requestCode, responseCode, intent);
     }
@@ -351,13 +287,10 @@ public class LoginActivity extends AppCompatActivity
      */
     private void handleSignInResult(GoogleSignInResult result) {
         progressDialog.dismiss();
-        Log.d("exito", "handleSignInResult:" + result.isSuccess());
+
         if (result.isSuccess()) {
-            // Signed in successfully, show authenticated UI.
+
             GoogleSignInAccount acct = result.getSignInAccount();
-
-            Log.e("display name: ", acct.getDisplayName());
-
             String personName = acct.getDisplayName();
             String personPhotoUrl = "";
             if (acct.getPhotoUrl() != null) {
@@ -365,12 +298,16 @@ public class LoginActivity extends AppCompatActivity
             }
             String email = acct.getEmail();
             String code = acct.getId();
+            /**
+             * creating object
+             */
             User user = new User();
             user.setId(0L);
             user.setNombre(personName);
             user.setIdGoogle(code);
             user.setEmail(email);
             user.setPhotoUrl(personPhotoUrl);
+
             new SendTask().execute(user);
 
         } else {
@@ -425,7 +362,6 @@ public class LoginActivity extends AppCompatActivity
         long idResponse = 0;
         String wexd;
 
-
         @Override
         protected void onPreExecute() {
             progressDialog = new ProgressDialog(LoginActivity.this);
@@ -440,7 +376,6 @@ public class LoginActivity extends AppCompatActivity
         @Override
         protected Void doInBackground(User... users) {
             try {
-//                wexd = new BUser(LoginActivity.this).logins(users[0]);
                 user = new BUser(LoginActivity.this).login(users[0]);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -451,12 +386,8 @@ public class LoginActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            if (user.getPkusuario() != 0) {
-                new Utils(LoginActivity.this).writeUser(user);
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                //startService(new Intent(getBaseContext(), NotificationListener.class));
-                finish();
-            } else {
+            if (user == null) {
+                progressDialog.dismiss();
                 Snackbar snackbar = Snackbar
                         .make(findViewById(R.id.rlLogin), "Ocurrio un error, intente nuevamente", Snackbar.LENGTH_LONG)
                         .setAction("OK", new View.OnClickListener() {
@@ -473,9 +404,34 @@ public class LoginActivity extends AppCompatActivity
                             }
                         });
                 snackbar.show();
+                return;
+            } else {
+                if (user.getPkusuario() != 0) {
+                    new Utils(LoginActivity.this).writeUser(user);
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    //startService(new Intent(getBaseContext(), NotificationListener.class));
+                    finish();
+                } else {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.rlLogin), "Ocurrio un error, intente nuevamente", Snackbar.LENGTH_LONG)
+                            .setAction("OK", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    new SendTask().execute(user);
+                                }
+                            })
+                            .setAction("NO", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    LoginManager.getInstance().logOut();
+                                    new Utils(LoginActivity.this).writeUser(null);
+                                }
+                            });
+                    snackbar.show();
 
+                }
+                progressDialog.dismiss();
             }
-            progressDialog.dismiss();
         }
     }
 

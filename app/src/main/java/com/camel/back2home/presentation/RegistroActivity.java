@@ -165,7 +165,6 @@ public class RegistroActivity extends AppCompatActivity implements View.OnClickL
         @Override
         protected Void doInBackground(User... users) {
             try {
-//                wexd = new BUser(RegistroActivity.this).logins(users[0]);
                 user = new BUser(RegistroActivity.this).login(users[0]);
             } catch (Exception e) {
                 e.printStackTrace();

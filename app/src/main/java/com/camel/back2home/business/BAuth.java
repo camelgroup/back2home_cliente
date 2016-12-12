@@ -57,4 +57,24 @@ public class BAuth {
         }
         return null;
     }
+
+    public Long forgotPassword(User user) throws Exception {
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(App.RECUPERAR_PASS);
+        try {
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);
+            nameValuePairs.add(new BasicNameValuePair("email", user.getEmail()));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity httpEntity = response.getEntity();
+            String result = EntityUtils.toString(httpEntity);
+            return Long.valueOf(result);
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+        }
+        return null;
+    }
+
 }

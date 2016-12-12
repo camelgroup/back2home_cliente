@@ -2,9 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/rlLogin"
     android:orientation="vertical">
 
-    <include layout="@layout/header"/>
+    <include layout="@layout/header" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -49,6 +50,16 @@
             android:layout_marginTop="20dp"
             android:text="Entrar"
             android:theme="@style/AppTheme.Button" />
+
+        <TextView
+            android:id="@+id/txt_login_recuperar_pass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:onClick="onClickForgotPassword"
+            android:padding="10dp"
+            android:text="@string/recuperar"
+            android:textSize="20dp" />
 
     </LinearLayout>
 

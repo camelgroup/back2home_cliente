@@ -18,6 +18,7 @@
     <string name="login">Login</string>
     <string name="iniciar_sesion">Iniciar sesión</string>
     <string name="registrarse">Registrarse</string>
+    <string name="recuperar">Recuperar mi contraseña :(</string>
     <string name="err_msg_name">El nombre es obligatorio</string>
     <string name="err_msg_email">Ingrese un email valido</string>
     <string name="err_msg_password">El password es obligatorio</string>
