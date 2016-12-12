@@ -22,6 +22,8 @@ public class User extends Entity {
     private String nroTelefono;
     @Expose
     private String idFacebook;
+    @Expose
+    private String password;
 
 
     public User() {
@@ -73,5 +75,13 @@ public class User extends Entity {
 
     public void setIdFacebook(String idFacebook) {
         this.idFacebook = idFacebook;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

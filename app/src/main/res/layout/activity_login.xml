@@ -27,8 +27,7 @@
             android:layout_centerVertical="true"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            android:src="@drawable/findmypets" />
-
+            android:src="@drawable/findmypet" />
 
     </RelativeLayout>
 
@@ -37,7 +36,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@color/color_login">
+        android:background="@color/color_login"
+        android:paddingBottom="10dp">
 
         <ImageView
             android:id="@+id/iv1"
@@ -74,13 +74,46 @@
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_below="@+id/btnFacebook"
-            android:layout_marginBottom="16dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:background="@drawable/button_google"
             android:onClick="onClickGoogle"
             android:text="@string/login_google"
             android:textColor="@android:color/white" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btnGoogle"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/txt_login_iniciar_sesion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text="@string/iniciar_sesion"
+                android:textColor="@drawable/textview_link"
+                android:textSize="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="|"
+                android:textColor="@color/color_white"
+                android:textSize="16dp" />
+
+            <TextView
+                android:id="@+id/txt_login_registrarse"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text="@string/registrarse"
+                android:textColor="@drawable/textview_link"
+                android:textSize="16dp" />
+
+        </LinearLayout>
+
     </RelativeLayout>
 
 
