@@ -24,6 +24,8 @@ public class User extends Entity {
     private String idFacebook;
     @Expose
     private String password;
+    @Expose
+    private String idGoogle;
 
 
     public User() {
@@ -83,5 +85,13 @@ public class User extends Entity {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getIdGoogle() {
+        return idGoogle;
+    }
+
+    public void setIdGoogle(String idGoogle) {
+        this.idGoogle = idGoogle;
     }
 }

@@ -25,26 +25,22 @@ import java.util.List;
 /**
  * Created by hp on 11/12/2016.
  */
-public class BUser {
+public class BAuth {
     /**
      * clase para controlar el login de usuarios
      */
     private Context context;
 
-    public BUser(Context context) {
+    public BAuth(Context context) {
         this.context = context;
     }
 
     public User login(User obj) throws Exception {
         HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(App.NUEVO_USUARIO);
+        HttpPost httppost = new HttpPost(App.AUTHICATION);
         try {
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(5);
             nameValuePairs.add(new BasicNameValuePair("email", obj.getEmail()));
-            nameValuePairs.add(new BasicNameValuePair("id_firebase", obj.getIdFirebase()));
-            nameValuePairs.add(new BasicNameValuePair("id_google", obj.getIdGoogle()));
-            nameValuePairs.add(new BasicNameValuePair("id_facebook", obj.getIdFacebook()));
-            nameValuePairs.add(new BasicNameValuePair("nombre", obj.getNombre()));
             nameValuePairs.add(new BasicNameValuePair("password", obj.getPassword()));
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             HttpResponse response = httpclient.execute(httppost);

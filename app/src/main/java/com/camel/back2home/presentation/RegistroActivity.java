@@ -71,26 +71,30 @@ public class RegistroActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void onClickRegistrarUsuario() {
-        submitForm();
+        if (!submitForm()) return;
         user = new User();
         user.setNombre(edtNombre.getText().toString());
         user.setEmail(edtEmail.getText().toString());
         user.setPassword(edtPassword.getText().toString());
+        user.setIdFacebook("");
+        user.setIdFirebase("");
+        user.setIdGoogle("");
         new SendTask().execute(user);
     }
 
-    private void submitForm() {
+    private boolean submitForm() {
         if (!validateName()) {
-            return;
+            return false;
         }
 
         if (!validateEmail()) {
-            return;
+            return false;
         }
 
         if (!validatePassword()) {
-            return;
+            return false;
         }
+        return true;
     }
 
     private boolean validateName() {

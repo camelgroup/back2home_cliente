@@ -5,14 +5,18 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.camel.back2home.R;
 import com.camel.back2home.Utils;
+import com.camel.back2home.business.BAuth;
 import com.camel.back2home.business.BUser;
 import com.camel.back2home.model.base.User;
 import com.facebook.login.LoginManager;
@@ -26,6 +30,7 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
     private User user = new User();
     private Button btnEntrar;
     private TextView edtEmail, edtPassword;
+    private TextInputLayout inputLayoutEmail, inputLayoutPass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +53,10 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
         edtEmail = (TextView) findViewById(R.id.edt_login_email);
         edtPassword = (TextView) findViewById(R.id.edt_login_password);
         btnEntrar = (Button) findViewById(R.id.btn_iniciar_sesion);
+
+        inputLayoutEmail = (TextInputLayout) findViewById(R.id.input_layout_email);
+        inputLayoutPass = (TextInputLayout) findViewById(R.id.input_layout_pass);
+
         btnEntrar.setOnClickListener(this);
     }
 
@@ -61,10 +70,58 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
     }
 
     private void onClickIniciarSession() {
+        if (!submitForm()) return;
         user = new User();
         user.setEmail(edtEmail.getText().toString());
         user.setPassword(edtPassword.getText().toString());
         new SendTask().execute(user);
+    }
+
+    private boolean submitForm() {
+        if (!validateEmail()) {
+            return false;
+        }
+
+        if (!validatePassword()) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateEmail() {
+        String email = edtEmail.getText().toString().trim();
+
+        if (email.isEmpty() || !isValidEmail(email)) {
+            inputLayoutEmail.setError(getString(R.string.err_msg_email));
+            requestFocus(edtEmail);
+            return false;
+        } else {
+            inputLayoutEmail.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private boolean validatePassword() {
+        if (edtPassword.getText().toString().trim().isEmpty()) {
+            inputLayoutPass.setError(getString(R.string.err_msg_password));
+            requestFocus(edtPassword);
+            return false;
+        } else {
+            inputLayoutPass.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private static boolean isValidEmail(String email) {
+        return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    private void requestFocus(View view) {
+        if (view.requestFocus()) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
     }
 
     public class SendTask extends AsyncTask<User, Void, Void> {
@@ -88,7 +145,7 @@ public class IniciarSesionActivity extends AppCompatActivity implements View.OnC
         protected Void doInBackground(User... users) {
             try {
 //                wexd = new BUser(IniciarSesionActivity.this).logins(users[0]);
-                user = new BUser(IniciarSesionActivity.this).login(users[0]);
+                user = new BAuth(IniciarSesionActivity.this).login(users[0]);
             } catch (Exception e) {
                 e.printStackTrace();
             }
