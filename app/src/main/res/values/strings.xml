@@ -1,8 +1,10 @@
 <resources>
     <string name="app_name">Back2Home</string>
     <string name="title_activity_maps">Map</string>
+
     <string name="google_maps_key">AIzaSyD7JBZfL0SQHYCmcDE_9YYTJs_aQA5Werg</string>
     <string name="facebook_app_id">688710437958394</string>
+
     <string name="action_add_favourite">Add to Favourites</string>
     <string name="action_play_next">Play Next</string>
     <string name="login_facebook">INICIAR SESION CON FACEBOOK</string>

@@ -5,14 +5,18 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -23,20 +27,36 @@ import com.camel.back2home.Utils;
 import com.camel.back2home.business.BUser;
 import com.camel.back2home.model.base.User;
 import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.firebase.client.Firebase;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
+
+import org.json.JSONObject;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final int RC_SIGN_IN = 0;
     private CallbackManager callbackManager;
     private boolean mIntentInProgress;
+    private GoogleApiClient plusClient;
     private LoginButton loginButton;
     private User user = new User();
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_login);
+
 
         ((TextView) findViewById(R.id.tvApp)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_BOLD));
         ((Button) findViewById(R.id.btnFacebook)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
@@ -53,74 +74,113 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(this, MainActivity.class));
         }
 
-//        loginButton = (LoginButton) findViewById(R.id.login_button);
-//        loginButton.setReadPermissions("public_profile, email, user_friends");
-//        callbackManager = CallbackManager.Factory.create();
-//        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-//            @Override
-//            public void onSuccess(LoginResult loginResult) {
-//                GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
-//                    @Override
-//                    public void onCompleted(JSONObject object, GraphResponse response) {
-//                        try {
-//                            User user = new User();
-////                            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-//                            String mPhoneNumber = "";
-////                            getMy10DigitPhoneNumber();
-//
-//                            String id = object.getString("id");
-//                            String personName = object.getString("name");
-//                            if (mPhoneNumber != null)
-//                                user.setNroTelefono(mPhoneNumber);
-//                            user.setNroTelefono("");
-//                            user.setNombre(personName);
-//                            user.setEmail("");
-//                            user.setIdFacebook(id);
-//                            Firebase firebase = new Firebase(App.FIREBASE_APP);
-//
-//                            //Pushing a new element to firebase it will automatically create a unique id
-//                            Firebase newFirebase = firebase.push();
-//
-//                            //Creating a map to store name value pair
-//                            Map<String, String> val = new HashMap<>();
-//
-//                            //pushing msg = none in the map
-//                            val.put("msg", "none");
-//
-//                            //saving the map to firebase
-//                            newFirebase.setValue(val);
-//
-//                            //Getting the unique id generated at firebase
-//                            String uniqueId = newFirebase.getKey();
-//                            user.setIdFirebase(uniqueId);
-//                            Log.i("QWD", uniqueId);
-//
-////                            user.setPkusuario(0);
-//                            //////
-////                            new Utils(LoginActivity.this).writeUser(user);
-////                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-////                            finish();
-//                            new SendTask().execute(user);
-//
-//                        } catch (Exception e) {
-//                            LoginManager.getInstance().logOut();
-//                            new Utils(LoginActivity.this).writeUser(null);
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }).executeAsync();
-//            }
-//
-//            @Override
-//            public void onCancel() {
-//                Log.i("Facebook", "Login cancelado");
-//            }
-//
-//            @Override
-//            public void onError(FacebookException exception) {
-//                exception.printStackTrace();
-//            }
-//        });
+        plusClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Plus.API)
+                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                .build();
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage("Conectando...");
+
+
+        if (plusClient.isConnected()) {
+            Plus.AccountApi.clearDefaultAccount(plusClient);
+            plusClient.disconnect();
+            plusClient.connect();
+        }
+
+        loginButton = (LoginButton) findViewById(R.id.login_button);
+        loginButton.setReadPermissions("public_profile, email, user_friends");
+
+        callbackManager = CallbackManager.Factory.create();
+
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        try {
+                            User user = new User();
+//                            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                            String mPhoneNumber = "";
+//                            getMy10DigitPhoneNumber();
+                            String id = object.getString("id");
+                            String personName = object.getString("name");
+                            if (mPhoneNumber != null)
+                                user.setNroTelefono(mPhoneNumber);
+                            user.setNroTelefono("");
+                            user.setNombre(personName);
+                            user.setEmail("");
+                            user.setIdFacebook(id);
+                            Firebase firebase = new Firebase(App.FIREBASE_APP);
+
+                            //Pushing a new element to firebase it will automatically create a unique id
+                            Firebase newFirebase = firebase.push();
+
+                            //Creating a map to store name value pair
+                            Map<String, String> val = new HashMap<>();
+
+                            //pushing msg = none in the map
+                            val.put("msg", "none");
+
+                            //saving the map to firebase
+                            newFirebase.setValue(val);
+
+                            //Getting the unique id generated at firebase
+                            String uniqueId = newFirebase.getKey();
+                            user.setIdFirebase(uniqueId);
+                            Log.i("QWD", uniqueId);
+
+//                            user.setPkusuario(0);
+                            //////
+//                            new Utils(LoginActivity.this).writeUser(user);
+//                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+//                            finish();
+                            new SendTask().execute(user);
+
+                        } catch (Exception e) {
+                            LoginManager.getInstance().logOut();
+                            new Utils(LoginActivity.this).writeUser(null);
+                            e.printStackTrace();
+                        }
+                    }
+                }).executeAsync();
+            }
+
+            @Override
+            public void onCancel() {
+                Log.i("Facebook", "Login cancelado");
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                exception.printStackTrace();
+            }
+        });
+
+
+        ((Button) findViewById(R.id.btnGoogle)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                plusClient.connect();
+                progressDialog.show();
+            }
+        });
+
+
+        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
+
+        signInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                plusClient.connect();
+                progressDialog.show();
+            }
+        });
 
     }
 
@@ -168,13 +228,75 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onClickGoogle(View view) {
-        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-        finish();
-//        Snackbar snackbar = Snackbar
-//                .make(findViewById(R.id.rlLogin), "Proximamente ;)", Snackbar.LENGTH_LONG);
-//        snackbar.show();
+//        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+//        finish();
+////        Snackbar snackbar = Snackbar
+////                .make(findViewById(R.id.rlLogin), "Proximamente ;)", Snackbar.LENGTH_LONG);
+////        snackbar.show();
+
     }
 
+
+    /**
+     * google plus methods
+     *
+     * @param bundle
+     */
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        progressDialog.dismiss();
+        if (Plus.PeopleApi.getCurrentPerson(plusClient) != null) {
+            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            String mPhoneNumber = tMgr.getLine1Number();
+
+            Person currentPerson = Plus.PeopleApi.getCurrentPerson(plusClient);
+            String personName = currentPerson.getDisplayName();
+            String personPhoto = currentPerson.getImage().getUrl();
+            String personId = currentPerson.getId();
+            String personEmail = currentPerson.getUrl();
+
+            User user = new User();
+            user.setId(0L);
+            user.setIdFacebook(personId);
+            user.setEmail(personEmail);
+            user.setNroTelefono(mPhoneNumber);
+            user.setNombre(personName);
+//            user.set(personPhoto);
+
+            new Utils(this).writeUser(user);
+//            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+//            finish();
+            new SendTask().execute(user);
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        try {
+            progressDialog.dismiss();
+            if (!mIntentInProgress && connectionResult.hasResolution()) {
+                try {
+                    mIntentInProgress = true;
+                    startIntentSenderForResult(connectionResult.getResolution().getIntentSender(),
+                            RC_SIGN_IN, null, 0, 0, 0);
+                } catch (IntentSender.SendIntentException e) {
+                    mIntentInProgress = false;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * async task to register device
+     */
     public class SendTask extends AsyncTask<User, Void, Void> {
         ProgressDialog progressDialog;
         long idResponse = 0;

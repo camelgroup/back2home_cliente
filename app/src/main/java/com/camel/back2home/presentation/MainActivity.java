@@ -3,6 +3,7 @@ package com.camel.back2home.presentation;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -17,6 +18,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.camel.back2home.App;
@@ -32,6 +34,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by hp on 11/12/2016.
@@ -43,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private GoogleCloudMessaging gcm;
     private String regid;
 
-    ProfilePictureView imagenFacebook;
+    private ImageView imagenGoogle;
+    private ProfilePictureView imagenFacebook;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,23 +55,29 @@ public class MainActivity extends AppCompatActivity {
         FacebookSdk.sdkInitialize(getApplicationContext());
         Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_main);
+        imagenGoogle = ((ImageView) findViewById(R.id.imageView));
 
 //        new Task().execute();
 
         utils = new Utils(this);
 
         user = utils.readUser();
+
         if (user != null) {
 
             // set circle bitmap
 //            startService(new Intent(getBaseContext(), NotificationListener.class));
-            imagenFacebook = (ProfilePictureView) findViewById(R.id.image);
-            imagenFacebook.setCropped(true);
-            imagenFacebook.setProfileId(user.getIdFacebook());
+//            imagenFacebook = (ProfilePictureView) findViewById(R.id.image);
+//            imagenFacebook.setCropped(true);
+//            imagenFacebook.setProfileId(user.getIdFacebook());
+
+            new ImageDownloader(imagenGoogle).execute(user.getIdFacebook());
+            imagenFacebook.setVisibility(View.GONE);
 
 
             ((TextView) findViewById(R.id.tvMainName)).setText(user.getNombre());
         }
+
         ((TextView) findViewById(R.id.tvCreatePost)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
         ((TextView) findViewById(R.id.tvShowMap)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
         ((TextView) findViewById(R.id.tvFindPets)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
@@ -189,4 +199,30 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
+
+    class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+
+        public ImageDownloader(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String url = urls[0];
+            Bitmap mIcon = null;
+            try {
+                InputStream in = new java.net.URL(url).openStream();
+                mIcon = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+            }
+            return mIcon;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setImageBitmap(result);
+        }
+    }
+
+
 }
