@@ -11,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -36,11 +35,14 @@ import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.firebase.client.Firebase;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.plus.Plus;
-import com.google.android.gms.plus.model.people.Person;
+import com.google.android.gms.common.api.Scope;
 
 import org.json.JSONObject;
 
@@ -48,13 +50,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoginActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,View.OnClickListener {
+public class LoginActivity extends AppCompatActivity
+        implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
 
-    private static final int RC_SIGN_IN = 0;
+    private static final int RC_SIGN_IN = 007;
+    private GoogleApiClient plusClient;
+
     private CallbackManager callbackManager;
     private boolean mIntentInProgress;
-    private GoogleApiClient plusClient;
+
     private LoginButton loginButton;
     private User user = new User();
     private ProgressDialog progressDialog;
@@ -66,48 +71,63 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     protected void onCreate(Bundle savedInstanceState) {
         FacebookSdk.sdkInitialize(this.getApplicationContext());
         super.onCreate(savedInstanceState);
-        Firebase.setAndroidContext(this);
+//        Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_login);
 
+        new Utils(this).getKeyHash();
 
+        /**
+         * changing typography
+         */
         ((TextView) findViewById(R.id.tvApp)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_BOLD));
         ((Button) findViewById(R.id.btnFacebook)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
         ((Button) findViewById(R.id.btnGoogle)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
+
+        /**
+         * login method
+         */
         this.txtIniciarSesion = (TextView) findViewById(R.id.txt_login_iniciar_sesion);
         this.txtIniciarSesion.setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
         this.txtIniciarSesion.setOnClickListener(this);
 
+        /**
+         * register method
+         */
         this.txtRegistrarse = (TextView) findViewById(R.id.txt_login_registrarse);
         this.txtRegistrarse.setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
         this.txtRegistrarse.setOnClickListener(this);
 
+        /**
+         * verifying is user is saved on preferences
+         */
         if (new Utils(this).readUser() != null) {
             startActivity(new Intent(this, MainActivity.class));
         }
+        /**
+         * google+ client
+         */
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.PLUS_LOGIN))
+                .requestScopes(new Scope(Scopes.PLUS_ME))
+                .requestEmail()
+                .build();
 
         plusClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Plus.API)
-                .addScope(Plus.SCOPE_PLUS_LOGIN)
+                .enableAutoManage(this, this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Conectando...");
 
-
-        if (plusClient.isConnected()) {
-            Plus.AccountApi.clearDefaultAccount(plusClient);
-            plusClient.disconnect();
-            plusClient.connect();
-        }
-
         loginButton = (LoginButton) findViewById(R.id.login_button);
         loginButton.setReadPermissions("public_profile, email, user_friends");
 
         callbackManager = CallbackManager.Factory.create();
-
+        /**
+         * facebook login event
+         */
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -173,25 +193,36 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
             }
         });
 
-
+        /**
+         * onClickGoogle button
+         */
         ((Button) findViewById(R.id.btnGoogle)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                plusClient.connect();
+//                plusClient.connect();
                 progressDialog.show();
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(plusClient);
+                startActivityForResult(signInIntent, RC_SIGN_IN);
             }
         });
 
-
-        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
-
-        signInButton.setOnClickListener(new View.OnClickListener() {
+        ((Button) findViewById(R.id.btnFacebook)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                plusClient.connect();
-                progressDialog.show();
+                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
             }
         });
+
+
+//        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
+//
+//        signInButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                plusClient.connect();
+//                progressDialog.show();
+//            }
+//        });
 
     }
 
@@ -207,6 +238,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         return s.substring(2);
     }
 
+    /**
+     * close app
+     */
     @Override
     public void onBackPressed() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -223,70 +257,67 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         alert.show();
     }
 
-
+    /**
+     * result on google or facebook events
+     *
+     * @param requestCode
+     * @param responseCode
+     * @param intent
+     */
     protected void onActivityResult(int requestCode, int responseCode, Intent intent) {
 //        callbackManager.onActivityResult(requestCode, responseCode, intent);
+        super.onActivityResult(requestCode, responseCode, intent);
 
         if (requestCode == RC_SIGN_IN) {
-            mIntentInProgress = false;
+//            mIntentInProgress = false;
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
+            handleSignInResult(result);
         }
         if (callbackManager != null)
             callbackManager.onActivityResult(requestCode, responseCode, intent);
     }
 
-    public void onClickFacebook(View view) {
-        LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
-    }
+    /**
+     * google+ response
+     *
+     * @param result
+     */
+    private void handleSignInResult(GoogleSignInResult result) {
+        progressDialog.dismiss();
+        Log.d("exito", "handleSignInResult:" + result.isSuccess());
+        if (result.isSuccess()) {
+            // Signed in successfully, show authenticated UI.
+            GoogleSignInAccount acct = result.getSignInAccount();
 
-    public void onClickGoogle(View view) {
-//        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-//        finish();
-////        Snackbar snackbar = Snackbar
-////                .make(findViewById(R.id.rlLogin), "Proximamente ;)", Snackbar.LENGTH_LONG);
-////        snackbar.show();
+            Log.e("display name: ", acct.getDisplayName());
 
+            String personName = acct.getDisplayName();
+            String personPhotoUrl = "";
+            if (acct.getPhotoUrl() != null) {
+                personPhotoUrl = acct.getPhotoUrl().toString();
+            }
+            String email = acct.getEmail();
+            String code = acct.getId();
+            User user = new User();
+            user.setId(0L);
+            user.setNombre(personName);
+            user.setIdGoogle(code);
+            user.setEmail(email);
+            user.setPhotoUrl(personPhotoUrl);
+            new SendTask().execute(user);
+
+        } else {
+            // Signed out, show unauthenticated UI.
+            progressDialog.dismiss();
+        }
     }
 
 
     /**
-     * google plus methods
+     * something happened with google sign in
      *
-     * @param bundle
+     * @param connectionResult
      */
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        progressDialog.dismiss();
-        if (Plus.PeopleApi.getCurrentPerson(plusClient) != null) {
-            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-            String mPhoneNumber = tMgr.getLine1Number();
-
-            Person currentPerson = Plus.PeopleApi.getCurrentPerson(plusClient);
-            String personName = currentPerson.getDisplayName();
-            String personPhoto = currentPerson.getImage().getUrl();
-            String personId = currentPerson.getId();
-            String personEmail = currentPerson.getUrl();
-
-            User user = new User();
-            user.setId(0L);
-            user.setIdFacebook(personId);
-            user.setEmail(personEmail);
-            user.setNroTelefono(mPhoneNumber);
-            user.setNombre(personName);
-//            user.set(personPhoto);
-
-            new Utils(this).writeUser(user);
-//            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-//            finish();
-            new SendTask().execute(user);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         try {
@@ -306,7 +337,7 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     }
 
     /**
-     * async task to register device
+     * register or login events
      */
     @Override
     public void onClick(View v) {
@@ -320,6 +351,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         }
     }
 
+    /**
+     * async task to register device
+     */
     public class SendTask extends AsyncTask<User, Void, Void> {
         ProgressDialog progressDialog;
         long idResponse = 0;

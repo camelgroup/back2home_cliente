@@ -56,8 +56,7 @@ public class MainActivity extends AppCompatActivity {
         Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_main);
         imagenGoogle = ((ImageView) findViewById(R.id.imageView));
-
-//        new Task().execute();
+        imagenFacebook= (ProfilePictureView) findViewById(R.id.image);
 
         utils = new Utils(this);
 
@@ -71,10 +70,8 @@ public class MainActivity extends AppCompatActivity {
 //            imagenFacebook.setCropped(true);
 //            imagenFacebook.setProfileId(user.getIdFacebook());
 
-            new ImageDownloader(imagenGoogle).execute(user.getIdFacebook());
+            new ImageDownloader(imagenGoogle).execute(user.getIdGoogle());
             imagenFacebook.setVisibility(View.GONE);
-
-
             ((TextView) findViewById(R.id.tvMainName)).setText(user.getNombre());
         }
 

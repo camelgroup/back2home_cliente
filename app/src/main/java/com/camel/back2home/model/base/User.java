@@ -27,6 +27,8 @@ public class User extends Entity {
     @Expose
     private String idGoogle;
 
+    private transient String photoUrl;
+
 
     public User() {
     }
@@ -93,5 +95,13 @@ public class User extends Entity {
 
     public void setIdGoogle(String idGoogle) {
         this.idGoogle = idGoogle;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
 }

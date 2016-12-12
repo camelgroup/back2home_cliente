@@ -3,7 +3,6 @@
     package="com.camel.back2home">
 
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-
     <permission
         android:name="com.camel.back2home.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
@@ -52,7 +51,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-    </activity>
+        </activity>
 
         <activity android:name=".presentation.MainActivity" />
         <activity
@@ -60,17 +59,17 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden" />
-            android:windowSoftInputMode="stateHidden"/>
+        android:windowSoftInputMode="stateHidden"/>
         <activity
             android:name=".presentation.IniciarSesionActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden"/>
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".presentation.RegistroActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden"/>
+            android:windowSoftInputMode="stateHidden" />
     </application>
     <activity
         android:name="com.facebook.FacebookActivity"
