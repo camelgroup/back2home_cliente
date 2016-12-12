@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "224491891997",
+    "project_id": "firebase-back2home"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:224491891997:android:bdbe838b88973129",
+        "android_client_info": {
+          "package_name": "com.camel.back2home"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "224491891997-l1ir51sbqv8k2d6ph6qhnog0ckbnpun0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.camel.back2home",
+            "certificate_hash": "E16C7C59DD77E03105A5F1A6B945F2014989D100"
+          }
+        },
+        {
+          "client_id": "224491891997-jea85g6hkopjhqqevl5mgd4ctve3r4qe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRYvSSGSNGku7cQRtEmEo1dHFy3tLN2Ms"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
