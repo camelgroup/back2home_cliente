@@ -34,7 +34,6 @@ import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.firebase.client.Firebase;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -44,11 +43,12 @@ import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
@@ -125,61 +125,93 @@ public class LoginActivity extends AppCompatActivity
         loginButton.setReadPermissions("public_profile, email, user_friends");
 
         callbackManager = CallbackManager.Factory.create();
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
+            }
+        });
         /**
          * facebook login event
          */
+
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                String accessToken = loginResult.getAccessToken().getToken();
+                GraphRequest request = GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        try {
+                        Log.i("LoginActivity", response.toString());
+                        // Get facebook data from login
+                        Bundle bFacebookData = getFacebookData(object);
+                        if (bFacebookData != null) {
                             User user = new User();
-//                            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                            String mPhoneNumber = "";
-//                            getMy10DigitPhoneNumber();
-                            String id = object.getString("id");
-                            String personName = object.getString("name");
-                            if (mPhoneNumber != null)
-                                user.setNroTelefono(mPhoneNumber);
-                            user.setNroTelefono("");
-                            user.setNombre(personName);
-                            user.setEmail("");
-                            user.setIdFacebook(id);
-                            Firebase firebase = new Firebase(App.FIREBASE_APP);
-
-                            //Pushing a new element to firebase it will automatically create a unique id
-                            Firebase newFirebase = firebase.push();
-
-                            //Creating a map to store name value pair
-                            Map<String, String> val = new HashMap<>();
-
-                            //pushing msg = none in the map
-                            val.put("msg", "none");
-
-                            //saving the map to firebase
-                            newFirebase.setValue(val);
-
-                            //Getting the unique id generated at firebase
-                            String uniqueId = newFirebase.getKey();
-                            user.setIdFirebase(uniqueId);
-                            Log.i("QWD", uniqueId);
-
-//                            user.setPkusuario(0);
-                            //////
-//                            new Utils(LoginActivity.this).writeUser(user);
-//                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-//                            finish();
+                            user.setIdFacebook(bFacebookData.getString("idFacebook"));
+                            user.setNombre(bFacebookData.getString("first_name") + " " + bFacebookData.getString("last_name"));
+                            user.setEmail(bFacebookData.getString("email"));
+                            user.setPkusuario(0);
                             new SendTask().execute(user);
-
-                        } catch (Exception e) {
-                            LoginManager.getInstance().logOut();
-                            new Utils(LoginActivity.this).writeUser(null);
-                            e.printStackTrace();
                         }
                     }
-                }).executeAsync();
+                });
+                Bundle parameters = new Bundle();
+                parameters.putString("fields", "id, first_name, last_name, email,gender, birthday, location"); // Parámetros que pedimos a facebook
+                request.setParameters(parameters);
+                request.executeAsync();
+
+//                GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+//                    @Override
+//                    public void onCompleted(JSONObject object, GraphResponse response) {
+//                        try {
+//                            User user = new User();
+////                            TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+//                            String mPhoneNumber = "";
+////                            getMy10DigitPhoneNumber();
+//                            String id = object.getString("id");
+//                            String personName = object.getString("name");
+//                            String email = object.getString("email");
+//
+//                            if (mPhoneNumber != null)
+//                                user.setNroTelefono(mPhoneNumber);
+//                            user.setNroTelefono("");
+//                            user.setNombre(personName);
+//                            user.setEmail(email);
+//                            user.setIdFacebook(id);
+////                            Firebase firebase = new Firebase(App.FIREBASE_APP);
+////
+////                            //Pushing a new element to firebase it will automatically create a unique id
+////                            Firebase newFirebase = firebase.push();
+////
+////                            //Creating a map to store name value pair
+////                            Map<String, String> val = new HashMap<>();
+////
+////                            //pushing msg = none in the map
+////                            val.put("msg", "none");
+////
+////                            //saving the map to firebase
+////                            newFirebase.setValue(val);
+////
+////                            //Getting the unique id generated at firebase
+////                            String uniqueId = newFirebase.getKey();
+////                            user.setIdFirebase(uniqueId);
+////                            Log.i("QWD", uniqueId);
+//
+////                            user.setPkusuario(0);
+//                            //////
+////                            new Utils(LoginActivity.this).writeUser(user);
+////                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+////                            finish();
+//                            new SendTask().execute(user);
+//
+//                        } catch (Exception e) {
+//                            LoginManager.getInstance().logOut();
+//                            new Utils(LoginActivity.this).writeUser(null);
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }).executeAsync();
             }
 
             @Override
@@ -206,12 +238,12 @@ public class LoginActivity extends AppCompatActivity
             }
         });
 
-        ((Button) findViewById(R.id.btnFacebook)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
-            }
-        });
+//        ((Button) findViewById(R.id.btnFacebook)).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
+//            }
+//        });
 
 
 //        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
@@ -225,6 +257,41 @@ public class LoginActivity extends AppCompatActivity
 //        });
 
     }
+
+    private Bundle getFacebookData(JSONObject object) {
+        try {
+            Bundle bundle = new Bundle();
+            String id = object.getString("id");
+
+            try {
+                URL profile_pic = new URL("https://graph.facebook.com/" + id + "/picture?width=200&height=150");
+                Log.i("profile_pic", profile_pic + "");
+                bundle.putString("profile_pic", profile_pic.toString());
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                return null;
+            }
+            bundle.putString("idFacebook", id);
+            if (object.has("first_name"))
+                bundle.putString("first_name", object.getString("first_name"));
+            if (object.has("last_name"))
+                bundle.putString("last_name", object.getString("last_name"));
+            if (object.has("email"))
+                bundle.putString("email", object.getString("email"));
+            if (object.has("gender"))
+                bundle.putString("gender", object.getString("gender"));
+            if (object.has("birthday"))
+                bundle.putString("birthday", object.getString("birthday"));
+            if (object.has("location"))
+                bundle.putString("location", object.getJSONObject("location").getString("name"));
+            return bundle;
+        } catch (JSONException e) {
+            Log.d("QWD", "Error parsing JSON");
+        }
+        return null;
+    }
+
 
     private String getMyPhoneNumber() {
         TelephonyManager mTelephonyMgr;
@@ -311,7 +378,6 @@ public class LoginActivity extends AppCompatActivity
             progressDialog.dismiss();
         }
     }
-
 
     /**
      * something happened with google sign in
