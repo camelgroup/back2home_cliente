@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.camel.back2home.R;
 import com.camel.back2home.Utils;
@@ -72,6 +71,7 @@ public class RegistroActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void onClickRegistrarUsuario() {
+        submitForm();
         user = new User();
         user.setNombre(edtNombre.getText().toString());
         user.setEmail(edtEmail.getText().toString());
@@ -91,8 +91,6 @@ public class RegistroActivity extends AppCompatActivity implements View.OnClickL
         if (!validatePassword()) {
             return;
         }
-
-        Toast.makeText(getApplicationContext(), "Thank You!", Toast.LENGTH_SHORT).show();
     }
 
     private boolean validateName() {

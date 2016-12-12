@@ -45,6 +45,7 @@ public class BUser {
             nameValuePairs.add(new BasicNameValuePair("nro_telefono", obj.getNroTelefono()));
             nameValuePairs.add(new BasicNameValuePair("id_facebook", obj.getIdFacebook()));
             nameValuePairs.add(new BasicNameValuePair("nombre", obj.getNombre()));
+            nameValuePairs.add(new BasicNameValuePair("password", obj.getPassword()));
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             HttpResponse response = httpclient.execute(httppost);
             HttpEntity httpEntity = response.getEntity();
