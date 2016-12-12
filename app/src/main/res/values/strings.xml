@@ -11,4 +11,14 @@
     <string name="login_google">INICIAR SESION CON GOOGLE+</string>
 
     <string name="backdrop_subtitle">This season top 20 albums</string>
+
+    <string name="nombre">Nombre</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="iniciar_sesion">Iniciar sesión</string>
+    <string name="registrarse">Registrarse</string>
+    <string name="err_msg_name">El nombre es obligatorio</string>
+    <string name="err_msg_email">Ingrese un email valido</string>
+    <string name="err_msg_password">El password es obligatorio</string>
 </resources>

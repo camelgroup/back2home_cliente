@@ -48,7 +48,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoginActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class LoginActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,View.OnClickListener {
+
 
     private static final int RC_SIGN_IN = 0;
     private CallbackManager callbackManager;
@@ -57,6 +58,9 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     private LoginButton loginButton;
     private User user = new User();
     private ProgressDialog progressDialog;
+
+    private TextView txtIniciarSesion;
+    private TextView txtRegistrarse;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +73,13 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
         ((TextView) findViewById(R.id.tvApp)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_BOLD));
         ((Button) findViewById(R.id.btnFacebook)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
         ((Button) findViewById(R.id.btnGoogle)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
+        this.txtIniciarSesion = (TextView) findViewById(R.id.txt_login_iniciar_sesion);
+        this.txtIniciarSesion.setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
+        this.txtIniciarSesion.setOnClickListener(this);
+
+        this.txtRegistrarse = (TextView) findViewById(R.id.txt_login_registrarse);
+        this.txtRegistrarse.setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
+        this.txtRegistrarse.setOnClickListener(this);
 
         if (new Utils(this).readUser() != null) {
             startActivity(new Intent(this, MainActivity.class));
@@ -297,6 +308,18 @@ public class LoginActivity extends AppCompatActivity implements GoogleApiClient.
     /**
      * async task to register device
      */
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.txt_login_iniciar_sesion:
+                startActivity(new Intent(this, IniciarSesionActivity.class));
+                break;
+            case R.id.txt_login_registrarse:
+                startActivity(new Intent(this, RegistroActivity.class));
+                break;
+        }
+    }
+
     public class SendTask extends AsyncTask<User, Void, Void> {
         ProgressDialog progressDialog;
         long idResponse = 0;
