@@ -17,14 +17,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.camel.back2home.App;
 import com.camel.back2home.R;
 import com.camel.back2home.Utils;
 import com.camel.back2home.business.BUser;
 import com.camel.back2home.model.base.User;
+import com.camel.back2home.services.LoginAsyncTask;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -40,16 +41,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-
 public class LoginActivity extends AppCompatActivity
-        implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
+        implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, LoginAsyncTask.OnCompletedLogin {
 
     private static final int RC_SIGN_IN = 007;
     private GoogleApiClient plusClient;
@@ -57,12 +57,17 @@ public class LoginActivity extends AppCompatActivity
     private CallbackManager callbackManager;
     private boolean mIntentInProgress;
 
-    private LoginButton loginButton;
+    private com.facebook.login.widget.LoginButton loginButton;
+    private SignInButton signInButton;
+
     private User user = new User();
     private ProgressDialog progressDialog;
 
     private TextView txtIniciarSesion;
     private TextView txtRegistrarse;
+
+    private LoginAsyncTask loginAsyncTask;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,13 +77,16 @@ public class LoginActivity extends AppCompatActivity
         setContentView(R.layout.activity_login);
 
         new Utils(this).getKeyHash();
+        /**
+         * instancing
+         */
+        loginButton = (LoginButton) findViewById(R.id.login_button);
+        signInButton = (SignInButton) findViewById(R.id.sign_in_button);
 
         /**
          * changing typography
          */
         ((TextView) findViewById(R.id.tvApp)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_BOLD));
-        ((Button) findViewById(R.id.btnFacebook)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
-        ((Button) findViewById(R.id.btnGoogle)).setTypeface(Typeface.createFromAsset(getAssets(), App.Font.ROBOTO_REGULAR));
 
         /**
          * login method
@@ -122,20 +130,23 @@ public class LoginActivity extends AppCompatActivity
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Conectando...");
 
-        loginButton = (LoginButton) findViewById(R.id.login_button);
+
         loginButton.setReadPermissions("public_profile, email, user_friends");
 
         callbackManager = CallbackManager.Factory.create();
+        /**
+         * onClickFacebook
+         */
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile, email, user_friends"));
+
             }
         });
-        /**
-         * facebook login event
-         */
 
+        /**
+         * facebook login event callback
+         */
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -156,12 +167,17 @@ public class LoginActivity extends AppCompatActivity
                             user.setNombre(bFacebookData.getString("first_name") + " " + bFacebookData.getString("last_name"));
                             user.setEmail(bFacebookData.getString("email"));
                             user.setPkusuario(0);
-                            new SendTask().execute(user);
+//                            new SendTask().execute(user);
+                            /**
+                             * call web service
+                             */
+                            loginAsyncTask = new LoginAsyncTask(LoginActivity.this, LoginActivity.this, false);
+                            loginAsyncTask.execute(user);
                         }
                     }
                 });
                 Bundle parameters = new Bundle();
-                // Parámetros que pedimos a facebook
+                //facebook params to get
                 parameters.putString("fields", "id, first_name, last_name, email,gender, birthday, location");
                 request.setParameters(parameters);
                 request.executeAsync();
@@ -175,13 +191,14 @@ public class LoginActivity extends AppCompatActivity
             @Override
             public void onError(FacebookException exception) {
                 exception.printStackTrace();
+                Toast.makeText(LoginActivity.this, "Verifique su conexion a internet", Toast.LENGTH_LONG).show();
             }
         });
 
         /**
          * onClickGoogle button
          */
-        ((Button) findViewById(R.id.btnGoogle)).setOnClickListener(new View.OnClickListener() {
+        signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 progressDialog.show();
@@ -224,6 +241,11 @@ public class LoginActivity extends AppCompatActivity
     }
 
 
+    /**
+     * get phone number?
+     *
+     * @return
+     */
     private String getMyPhoneNumber() {
         TelephonyManager mTelephonyMgr;
         mTelephonyMgr = (TelephonyManager)
@@ -269,7 +291,6 @@ public class LoginActivity extends AppCompatActivity
          * if google
          */
         if (requestCode == RC_SIGN_IN) {
-//            mIntentInProgress = false;
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
             handleSignInResult(result);
         }
@@ -308,7 +329,10 @@ public class LoginActivity extends AppCompatActivity
             user.setEmail(email);
             user.setPhotoUrl(personPhotoUrl);
 
-            new SendTask().execute(user);
+
+            //new SendTask().execute(user);
+            loginAsyncTask = new LoginAsyncTask(LoginActivity.this, LoginActivity.this, false);
+            loginAsyncTask.execute(user);
 
         } else {
             // Signed out, show unauthenticated UI.
@@ -355,12 +379,37 @@ public class LoginActivity extends AppCompatActivity
     }
 
     /**
+     * events from web login webservice
+     *
+     * @param object user
+     */
+    @Override
+    public void OnCorrectLogin(Object object) {
+        new Utils(LoginActivity.this).writeUser((User) object);
+        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+        this.finish();
+    }
+
+    /**
+     * if something happened with web service
+     *
+     * @param exception
+     */
+    @Override
+    public void OnFailLogin(Exception exception) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Ocurrio un error con el servidor")
+                .setCancelable(false)
+                .setNeutralButton("Aceptar", null);
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    /**
      * async task to register device
      */
     public class SendTask extends AsyncTask<User, Void, Void> {
         ProgressDialog progressDialog;
-        long idResponse = 0;
-        String wexd;
 
         @Override
         protected void onPreExecute() {
@@ -386,10 +435,11 @@ public class LoginActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+
             if (user == null) {
                 progressDialog.dismiss();
                 Snackbar snackbar = Snackbar
-                        .make(findViewById(R.id.rlLogin), "Ocurrio un error, intente nuevamente", Snackbar.LENGTH_LONG)
+                        .make(findViewById(R.id.rlLogin), "Verifique su conexion a internet", Snackbar.LENGTH_LONG)
                         .setAction("OK", new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {

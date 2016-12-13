@@ -154,7 +154,7 @@ public class RegistroActivity extends AppCompatActivity implements View.OnClickL
         @Override
         protected void onPreExecute() {
             progressDialog = new ProgressDialog(RegistroActivity.this);
-            progressDialog.setMessage("Iniciando Sesion...");
+            progressDialog.setMessage("Registrando ...");
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setProgress(10);
             progressDialog.setMax(100);
