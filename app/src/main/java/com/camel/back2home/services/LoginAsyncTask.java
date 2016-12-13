@@ -52,9 +52,7 @@ public class LoginAsyncTask extends AsyncTask<User, Void, Void> {
         super.onPostExecute(aVoid);
         if (user == null) {
             progressDialog.dismiss();
-            /**
-             * progress dialog?
-             */
+            onCompletedLogin.OnFailLogin(null);
             return;
         } else {
             if (user.getPkusuario() != 0) {

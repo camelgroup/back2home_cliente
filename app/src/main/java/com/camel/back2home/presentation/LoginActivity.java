@@ -7,23 +7,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.camel.back2home.App;
 import com.camel.back2home.R;
 import com.camel.back2home.Utils;
-import com.camel.back2home.business.BUser;
 import com.camel.back2home.model.base.User;
 import com.camel.back2home.services.LoginAsyncTask;
 import com.facebook.CallbackManager;
@@ -32,7 +28,6 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
-import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
@@ -191,7 +186,7 @@ public class LoginActivity extends AppCompatActivity
             @Override
             public void onError(FacebookException exception) {
                 exception.printStackTrace();
-                Toast.makeText(LoginActivity.this, "Verifique su conexion a internet", Toast.LENGTH_LONG).show();
+                OnFailLogin(exception);
             }
         });
 
@@ -403,86 +398,6 @@ public class LoginActivity extends AppCompatActivity
                 .setNeutralButton("Aceptar", null);
         AlertDialog alert = builder.create();
         alert.show();
-    }
-
-    /**
-     * async task to register device
-     */
-    public class SendTask extends AsyncTask<User, Void, Void> {
-        ProgressDialog progressDialog;
-
-        @Override
-        protected void onPreExecute() {
-            progressDialog = new ProgressDialog(LoginActivity.this);
-            progressDialog.setMessage("Iniciando Sesion...");
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setProgress(10);
-            progressDialog.setMax(100);
-            progressDialog.setCancelable(false);
-            progressDialog.show();
-        }
-
-        @Override
-        protected Void doInBackground(User... users) {
-            try {
-                user = new BUser(LoginActivity.this).login(users[0]);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            if (user == null) {
-                progressDialog.dismiss();
-                Snackbar snackbar = Snackbar
-                        .make(findViewById(R.id.rlLogin), "Verifique su conexion a internet", Snackbar.LENGTH_LONG)
-                        .setAction("OK", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                new SendTask().execute(user);
-                            }
-                        })
-                        .setAction("NO", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                LoginManager.getInstance().logOut();
-                                new Utils(LoginActivity.this).writeUser(null);
-                            }
-                        });
-                snackbar.show();
-                return;
-            } else {
-                if (user.getPkusuario() != 0) {
-                    new Utils(LoginActivity.this).writeUser(user);
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    //startService(new Intent(getBaseContext(), NotificationListener.class));
-                    finish();
-                } else {
-                    Snackbar snackbar = Snackbar
-                            .make(findViewById(R.id.rlLogin), "Ocurrio un error, intente nuevamente", Snackbar.LENGTH_LONG)
-                            .setAction("OK", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    new SendTask().execute(user);
-                                }
-                            })
-                            .setAction("NO", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    LoginManager.getInstance().logOut();
-                                    new Utils(LoginActivity.this).writeUser(null);
-                                }
-                            });
-                    snackbar.show();
-
-                }
-                progressDialog.dismiss();
-            }
-        }
     }
 
 }
